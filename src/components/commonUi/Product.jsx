@@ -1,23 +1,28 @@
+"use client"; // Next.js App Router ব্যবহার করলে এটি একদম উপরে দিতে হবে
+
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 
 export default function Product({ image, colorImages = [], name, category, price, originalPrice, discount, tag }) {
+  // বড় ইমেজের ট্র্যাক রাখার জন্য useState ব্যবহার করা হয়েছে
+  const [currentImage, setCurrentImage] = useState(image);
+
   return (
-    /* 
-      নরমাল অবস্থায় বর্ডার transparent থাকবে, hover করলে border-gray-900 হবে।
-      নিচের দিকে হোভারের কন্টেন্ট দেখানোর জন্য p-2 এবং নেতিবাচক margin (mb-[-50px] বা তার বেশি) ব্যবহার করা যেতে পারে 
-      অথবা সিম্পল রিলেটিভ পজিশন দিয়ে হ্যান্ডেল করা যায়।
-    */
-    <div className="group cursor-pointer flex flex-col w-full bg-white border border-transparent hover:border-gray-900 p-2 transition-all duration-300 relative">
+    <div 
+      className="group cursor-pointer flex flex-col w-full bg-white border border-transparent hover:border-gray-900 p-2 transition-all duration-300 relative"
+      // মাউস পুরো প্রোডাক্ট কার্ড থেকে সরিয়ে নিলে আবার আগের মেইন ইমেজটি ফিরে আসবে (ঐচ্ছিক)
+      onMouseLeave={() => setCurrentImage(image)} 
+    >
       {/* Product Image Wrapper */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#f5f5f5] mb-3">
         <Image
-          src={image}
+          src={currentImage} // 👈 এখানে সরাসরি 'image' না দিয়ে স্টেট 'currentImage' ব্যবহার করা হয়েছে
           alt={name}
           fill
           sizes="(max-width: 768px) 100vw, 25vw"
           className="object-contain transition-transform duration-300 group-hover:scale-105"
         />
+        
         {/* Top Right Wishlist Heart Icon */}
         <button className="absolute top-2 right-2 text-gray-400 hover:text-black transition duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="w-5 h-5">
@@ -29,7 +34,14 @@ export default function Product({ image, colorImages = [], name, category, price
       {/* Color Thumbnails: যা শুধু HOVER করলেই দেখা যাবে */}
       <div className="h-0 opacity-0 pointer-events-none group-hover:h-15 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 flex items-center gap-1 overflow-x-auto mb-2 scrollbar-none">
         {Array.isArray(colorImages) && colorImages.map((imgUrl, index) => (
-          <div key={index} className="w-15 h-15 relative bg-gray-100 border border-transparent hover:border-gray-900 transition-all">
+          <div 
+            key={index} 
+            // 👈 onMouseEnter দিয়ে ছোট ইমেজে হোভার করলে মেইন ইমেজ স্টেট পরিবর্তন করা হচ্ছে
+            onMouseEnter={() => setCurrentImage(imgUrl)}
+            className={`w-15 h-15 relative bg-gray-100 border transition-all ${
+              currentImage === imgUrl ? "border-gray-900" : "border-transparent"
+            } hover:border-gray-900`}
+          >
             <Image 
               src={imgUrl} 
               alt="color variant" 
@@ -42,28 +54,31 @@ export default function Product({ image, colorImages = [], name, category, price
 
       {/* Product Info Section */}
       <div className="flex flex-col grow text-left">
-        {/* Price Tag (Discounts fields active on hover state look or default) */}
+        {/* Price Tag */}
         <div className="flex flex-col mb-1">
           <span className={`text-sm font-bold ${discount ? 'text-red-600' : 'text-gray-900'}`}>
             {price}
           </span>
-          {/* Original Price & Discount: হোভার ছাড়া স্পেস ধরে রাখবে কিন্তু হোভার করলে স্পষ্ট হবে (Adidas Style) */}
           <div className="flex items-center gap-2 text-xs text-gray-400">
             {originalPrice && <span className="line-through">{originalPrice}</span>}
             {discount && <span className="text-red-500">{discount}</span>}
           </div>
         </div>
+
         {/* Product Name */}
         <h3 className="text-sm font-medium text-gray-900 uppercase tracking-tight leading-tight mb-0.5">
           {name}
         </h3>
+
         {/* Category */}
         <p className="text-xs text-gray-400 font-normal mb-1">{category}</p>
+
         {/* Total Colors count text */}
         {colorImages.length > 0 && (
           <p className="text-xs text-gray-400 font-normal">{colorImages.length} colours</p>
         )}
-        {/* Extra promo tag (যা হোভার করলে নিচে এডিশনাল দেখাবে) */}
+
+        {/* Extra promo tag */}
         {tag && (
           <p className="text-xs text-gray-900 font-medium mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             {tag}
